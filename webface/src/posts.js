@@ -39,18 +39,6 @@ class PostService {
     });
   }
   static getPostsByTags(skip, limit, name, date, access) {
-    console.log(
-      url2 +
-        String(name || 0) +
-        "/" +
-        String(date || 0) +
-        "/" +
-        String(access || 0) +
-        "/" +
-        String(skip || 0) +
-        "/" +
-        String(limit || 0)
-    );
     return new Promise(async (resolve, reject) => {
       try {
         const res = await axios.get(
@@ -79,7 +67,9 @@ class PostService {
   static dataParser(Allposts) {
     const posts = Allposts.map((post) => ({
       id: post._id,
-      time: post.info[0].day,
+      date: post.info[0].day,
+      time: post.info[0].time,
+      imgName: post.info[0].imgName,
       confidence: post.info[0].confidence,
       name: post.info[0].name,
       access: post.info[0].access,
