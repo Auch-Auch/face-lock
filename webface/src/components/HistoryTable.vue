@@ -19,7 +19,7 @@
         <td>
           <span :class="[post.typeClass]" class="white-text badge red"> access </span>
         </td>
-        <td>{{ post.confidence.toFixed(2) }}</td>
+        <td>{{ post.confidence }}</td>
         <td>
           <button class="btn-small btn black"  @click="$router.push('/detail/' + post.time)">
             <i class="material-icons">open_in_new</i>

@@ -3,9 +3,31 @@
     <div class="page-title">
       <h2>History</h2>
     </div>
-    <div class="history-chart">
-      <canvas ref="canvas"></canvas>
-    </div>
+    <form class="form" @submit.prevent="submitHandler">
+      <div class="container">
+        <div class="input-field col s12">
+          <i class="material-icons prefix">assignment_ind</i>
+          <input v-model="name" type="text" id="autocomplete-input" class="autocomplete" />
+          <label for="autocomplete-input">name</label>
+        </div>
+        <div class="input-field col s12">
+          <i class="material-icons prefix">access_time</i>
+          <input type="text" id="datepicker-input" class="datepicker" v-model.lazy="date" />
+          <label for="datepicker-input">pick date</label>
+        </div>
+        <div class="input-field col s12">
+          <select ref="select" v-model="access">
+            <option value disabled selected>Choose a access</option>
+            <option value="true">access</option>
+            <option value="false">no access</option>
+          </select>
+        </div>
+        <button class="btn waves-effect waves-light black" type="submit">
+          search
+          <i class="material-icons right">send</i>
+        </button>
+      </div>
+    </form>
     <loader v-if="loading" />
     <section class="selection-chart" v-else>
       <HistoryTable :posts="items" />
@@ -17,7 +39,7 @@
         :prev-text="'Prev'"
         :next-text="'Next'"
         :container-class="'pagination'"
-        :page-class="'waves-effect waves-black darken-4'"
+        :page-class="'waves-effect'"
       />
     </section>
   </div>
@@ -35,72 +57,60 @@ export default {
   mixins: [Pagination],
   components: {
     HistoryTable,
-    loader
+    loader,
   },
   data() {
     return {
       posts: [],
+      postsCount: 0,
       error: "",
-      text: "",
+      text: "0",
       loading: true,
+      skip: 0,
+      limit: 10,
+      name: "",
+      access: "",
+      date: "",
     };
   },
   async mounted() {
+    const self = this;
+    var elems = document.querySelectorAll("select");
+    var instances = M.FormSelect.init(elems, {});
+    var elems = document.querySelectorAll(".datepicker");
+    var instancesDate = M.Datepicker.init(elems, {
+      format: "yyyy-mm-dd",
+      autoClose: true,
+      defaultDate: "now",
+      showClearBtn: true,
+      startView: "years",
+    }).toString();
     try {
-      this.posts = await PostService.getPosts();
-      console.log(this.posts)
-      this.setup();
+      this.postsCount = await PostService.getPostsCount(this.name, this.date, this.access);
+      this.posts = await PostService.getPostsByTags(this.skip, 
+      this.limit, this.name, this.date, this.access);
+
+      this.posts = PostService.dataParser(this.posts);
+      this.setupPagination(this.postsCount, this.posts);
       this.loading = false;
-      console.log();
     } catch (err) {}
   },
   methods: {
-    statisticF() {
-      i = 0
-      while (this.posts[i].time.slice(0, 10) == this.posts[i + 1].time.slice(0, 10)) {
-        i += 1
-      }
-      console.log(i)
-    },
-    setup() {
+    async submitHandler(event) {
+      console.log(this.date, "\n", this.name);
+      this.posts = await PostService.getPostsByTags(
+        this.skip,
+        this.limit,
+        this.name,
+        this.date,
+        this.access
+      );
+      this.posts = PostService.dataParser(this.posts);
+      this.postsCount = await PostService.getPostsCount(this.name, this.date, this.access);
+      this.$router.push(`${this.$route.path}?page=${1}`);
+      this.setupPagination(this.postsCount, this.posts, this.name, this.date, this.access);
       
-      this.posts = this.posts.map(post => ({
-        id: post._id,
-        time: post.info[0].time,
-        confidence: +post.info[0].confidence,
-        name: post.info[0].name,
-        access: post.info[0].access,
-        typeClass: post.info[0].access ? "green" : "red"
-      }));
-      console.log(this.posts)
-      this.setupPagination(this.posts.reverse());
-      this.renderChart({
-        labels: this.posts.map(d => d.time),
-        datasets: [
-          {
-            label: "THE LESS THE BETTER",
-            data: this.posts.map(a => a.accuracy),
-            backgroundColor: [
-              "rgba(255, 99, 132, 0.2)",
-              "rgba(54, 162, 235, 0.2)",
-              "rgba(255, 206, 86, 0.2)",
-              "rgba(75, 192, 192, 0.2)",
-              "rgba(153, 102, 255, 0.2)",
-              "rgba(255, 159, 64, 0.2)"
-            ],
-            borderColor: [
-              "rgba(255, 99, 132, 1)",
-              "rgba(54, 162, 235, 1)",
-              "rgba(255, 206, 86, 1)",
-              "rgba(75, 192, 192, 1)",
-              "rgba(153, 102, 255, 1)",
-              "rgba(255, 159, 64, 1)"
-            ],
-            borderWidth: 1
-          }
-        ]
-      });
-    }
-  }
+    },
+  },
 };
 </script>

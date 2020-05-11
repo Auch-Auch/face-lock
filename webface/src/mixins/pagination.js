@@ -1,23 +1,39 @@
 import _ from "lodash";
+import PostService from "../posts";
 export default {
   data() {
     return {
       page: 1,
-      pageSize: 5,
-      pageCount: 0,
-      allPosts: [],
-      items: []
+      pageSize: 10,
+      pageCount: 1,
+      posts: [],
+      items: [],
+      name: "",
+      date: "",
+      access: "",
     };
   },
   methods: {
-    pageChangeHandler(page) {
+    async pageChangeHandler(page) {
       this.$router.push(`${this.$route.path}?page=${page}`);
-      this.items = this.allPosts[this.page - 1] || this.allPosts[0];
+      this.posts = await PostService.getPostsByTags(
+        (page - 1) * 10,
+        this.pageSize,
+        this.name,
+        this.date,
+        this.access
+      );
+      this.posts = PostService.dataParser(this.posts);
+      this.items = this.posts;
     },
-    setupPagination(allPosts) {
-      this.allPosts = _.chunk(allPosts, this.pageSize);
-      this.pageCount = _.size(this.allPosts);
-      this.items = this.allPosts[this.page - 1] || this.allPosts[0];
-    }
-  }
+    setupPagination(postsCount, allPosts, name, date, access) {
+      this.page = 1;
+      this.name = name;
+      this.date = date;
+      this.access = access;
+      this.posts = allPosts;
+      this.pageCount = Math.ceil(postsCount / this.pageSize);
+      this.items = allPosts;
+    },
+  },
 };

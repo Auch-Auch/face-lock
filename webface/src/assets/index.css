@@ -38,7 +38,6 @@
   width: 250px;
 }
 .times {
-  text-align: center;
 }
 .images {
   max-width: 100%;
@@ -83,13 +82,36 @@
 .app-content.full {
   padding-left: 0;
 }
+.pagination li.active {
+  background-color: #080707;
+}
+.datepicker-date-display {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 auto;
+  -ms-flex: 1 auto;
+  flex: 1 auto;
+  background-color: #0c0c0c;
+  color: #fff;
+  padding: 20px 22px;
+  font-weight: 500;
+}
+.datepicker-day-button:focus {
+  background-color: rgba(6, 7, 7, 0.25);
+}
+.datepicker-table td.is-selected {
+  background-color: #050706;
+  color: #fff;
+}
+.datepicker-table td.is-today {
+  color: #e00025;
+}
 .page-title {
   align-items: center;
   border-bottom: solid 1px rgba(51, 51, 51, 0.12);
   justify-content: space-between;
   -ms-flex-align: center;
   -ms-flex-pack: justify;
-  padding-bottom: 1rem;
+  padding-bottom: 0.1rem;
   -webkit-align-items: center;
   -webkit-justify-content: space-between;
 }
@@ -105,8 +127,8 @@
 }
 .page-subtitle h4,
 .page-title {
-  margin-bottom: 2rem;
-  margin-top: 2rem;
+  margin-bottom: 0.1rem;
+  margin-top: 0.1rem;
 }
 .app-loader,
 .currency-line,

@@ -52,7 +52,7 @@ export default {
     });
     const elemsSidenav = document.querySelectorAll(".sidenav");
     const instancesSidenav = M.Sidenav.init(elemsSidenav, {
-      edge: "center"
+      edge: "left"
     });
     this.interval = setInterval(() => {
       this.date = new Date();
