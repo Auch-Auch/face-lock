@@ -4,55 +4,59 @@ const mongodb = require("mongodb");
 const router = express.Router();
 
 router.get("/:name/:date/:access/:skip/:limit", async (req, res) => {
-  const date = req.params.date === "0" ? {} : { "info.day": req.params.date };
-  const access =
-    req.params.access === "0"
-      ? {}
-      : { "info.access": JSON.parse(req.params.access) };
-  const skip = 0 || req.params.skip;
-  const limit = 0 || req.params.limit;
-  const name =
-    req.params.name === "0"
-      ? {}
-      : { "info.name": req.params.name.toLowerCase() };
-  console.log(date, access, name);
-  const posts = await loadPostsColletion();
-  posts.find({ "info.name": { $exists: true } }).forEach((obj) => {
-    posts.updateOne(
-      { _id: obj._id },
-      { $set: { "info.0.name": new String(obj.info[0].name).toLowerCase() } }
-    );
-  });
-  if (
-    Object.keys(date).length === 0 &&
-    Object.keys(name).length === 0 &&
-    Object.keys(access).length === 0
-  ) {
-    res.send(
-      await posts
-        .find()
-        .sort({ date: -1 })
-        .skip(Number(skip))
-        .limit(Number(limit))
-        .toArray()
-    );
-  } else {
-    res.send(
-      await posts
-        .find({
-          $and: [date, access, name],
-        })
-        .sort({ date: -1 })
-        .skip(Number(skip))
-        .limit(Number(limit))
-        .toArray()
-    );
+  try {
+    const date =
+      req.params.date === "any" ? {} : { "info.day": req.params.date };
+    const access =
+      req.params.access === "any"
+        ? {}
+        : { "info.access": JSON.parse(req.params.access) };
+    const skip = 0 || req.params.skip;
+    const limit = 0 || req.params.limit;
+    const name =
+      req.params.name === "any"
+        ? {}
+        : { "info.name": req.params.name.toLowerCase() };
+    console.log(date, access, name);
+    const posts = await loadPostsColletion();
+    if (
+      Object.keys(date).length === "any" &&
+      Object.keys(name).length === "any" &&
+      Object.keys(access).length === "any"
+    ) {
+      res.send(
+        await posts
+          .find()
+          .sort({ date: -1 })
+          .skip(Number(skip))
+          .limit(Number(limit))
+          .toArray()
+      );
+    } else {
+      res.send(
+        await posts
+          .find({
+            $and: [date, access, name],
+          })
+          .sort({ date: -1 })
+          .skip(Number(skip))
+          .limit(Number(limit))
+          .toArray()
+      );
+    }
+  } catch (e) {
+    console.log(e);
   }
 });
 
-router.get("/", async (req, res) => {
-  const posts = await loadPostsColletion();
-  res.send(await posts.find({}).toArray());
+router.get("/:id", async (req, res) => {
+  try {
+    const id = new mongodb.ObjectID(req.params.id);
+    const posts = await loadPostsColletion();
+    res.send(await posts.find({ _id: id }).toArray());
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 router.post("/", async (req, res) => {
@@ -62,8 +66,22 @@ router.post("/", async (req, res) => {
       info: req.body,
       date: new Date().toISOString(),
     });
+    posts
+      .find({})
+      .sort({ $natural: -1 })
+      .limit(1)
+      .forEach((obj) => {
+        posts.updateOne(
+          { _id: obj._id },
+          {
+            $set: { "info.0.name": new String(obj.info[0].name).toLowerCase() },
+          }
+        );
+      });
     res.status(201).send();
-  } catch (e) {}
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 async function loadPostsColletion() {

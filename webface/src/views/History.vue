@@ -8,12 +8,16 @@
         <div class="input-field col s12">
           <i class="material-icons prefix">assignment_ind</i>
           <input v-model="name" type="text" id="autocomplete-input" class="autocomplete" />
-          <label for="autocomplete-input">name</label>
+          <label
+            for="autocomplete-input"
+          >{{this.$route.query.name === 'any' || !this.name ? "name" : ""}}</label>
         </div>
         <div class="input-field col s12">
           <i class="material-icons prefix">access_time</i>
-          <input type="text" id="datepicker-input" class="datepicker" v-model.lazy="date" />
-          <label for="datepicker-input">pick date</label>
+          <input type="text" id="datepicker-input" class="picker" v-model.lazy="date" />
+          <label
+            for="datepicker-input"
+          >{{this.$route.query.date === 'any' || !this.date ? "pick date" : ""}}</label>
         </div>
         <div class="input-field col s12">
           <select ref="select" v-model="access">
@@ -29,6 +33,9 @@
       </div>
     </form>
     <loader v-if="loading" />
+
+    <h5 class="center" v-else-if="!items.length">there are no such records</h5>
+
     <section class="selection-chart" v-else>
       <HistoryTable :posts="items" />
 
@@ -50,10 +57,8 @@ import loader from "@/components/loader";
 import Pagination from "@/mixins/pagination";
 import HistoryTable from "@/components/HistoryTable";
 import PostService from "../posts";
-import { Bar } from "vue-chartjs";
 export default {
   name: "history",
-  extends: Bar,
   mixins: [Pagination],
   components: {
     HistoryTable,
@@ -67,7 +72,7 @@ export default {
       text: "0",
       loading: true,
       skip: 0,
-      limit: 10,
+      limit: 5,
       name: "",
       access: "",
       date: "",
@@ -86,18 +91,29 @@ export default {
       startView: "years",
     }).toString();
     try {
-      this.postsCount = await PostService.getPostsCount(this.name, this.date, this.access);
-      this.posts = await PostService.getPostsByTags(this.skip, 
-      this.limit, this.name, this.date, this.access);
-
+      const page = +this.$route.query.page
+      const name = this.$route.query.name
+      const date = this.$route.query.date
+      const access = this.$route.query.access
+      this.postsCount = await PostService.getPostsCount(name, date, access);
+      this.posts = await PostService.getPostsByTags((page - 1) * this.limit, 
+      this.limit, name, date, access);
       this.posts = PostService.dataParser(this.posts);
-      this.setupPagination(this.postsCount, this.posts);
+      this.setupPagination(
+        page,
+        this.postsCount,
+        this.posts,
+        name,
+        date,
+        access
+        );
       this.loading = false;
     } catch (err) {}
   },
   methods: {
     async submitHandler(event) {
-      console.log(this.date, "\n", this.name);
+      this.loading = true
+      this.page = 1
       this.posts = await PostService.getPostsByTags(
         this.skip,
         this.limit,
@@ -107,8 +123,13 @@ export default {
       );
       this.posts = PostService.dataParser(this.posts);
       this.postsCount = await PostService.getPostsCount(this.name, this.date, this.access);
-      this.$router.push(`${this.$route.path}?page=${1}`);
-      this.setupPagination(this.postsCount, this.posts, this.name, this.date, this.access);
+      this.$router.push(
+        `${this.$route.path}?page=${this.page}&name=${this.name || "any"}&date=${this.date || "any"}&access=${this.access || "any"}`
+      );
+      this.setupPagination(
+        this.page, this.postsCount, this.posts, this.name, this.date, this.access
+        );
+      this.loading = false
       
     },
   },

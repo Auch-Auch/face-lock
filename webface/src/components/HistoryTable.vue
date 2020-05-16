@@ -6,7 +6,6 @@
         <th>date</th>
         <th>Name</th>
         <th>Type</th>
-        <th>confidence</th>
         <th>detail</th>
       </tr>
     </thead>
@@ -19,9 +18,9 @@
         <td>
           <span :class="[post.typeClass]" class="white-text badge red">access</span>
         </td>
-        <td>{{ post.confidence }}</td>
+
         <td>
-          <button class="btn-small btn black" @click="$router.push('/detail/' + post.imgName)">
+          <button class="btn-small btn black" @click="$router.push('/detail/' + post.id)">
             <i class="material-icons">open_in_new</i>
           </button>
         </td>
@@ -35,6 +34,6 @@ export default {
   props: ["posts"],
   data: () => ({
     access: true
-  })
+  }),
 };
 </script>

@@ -1,4 +1,6 @@
 import Vue from "vue";
+import { MonthPicker } from "vue-month-picker";
+import { MonthPickerInput } from "vue-month-picker";
 import App from "./App.vue";
 import Paginate from "vuejs-paginate";
 import "./registerServiceWorker";
@@ -10,9 +12,11 @@ import dateFilter from "@/filter/datefilters";
 Vue.config.productionTip = false;
 Vue.filter("date", dateFilter);
 Vue.component("paginate", Paginate);
+Vue.use(MonthPicker);
+Vue.use(MonthPickerInput);
 
 new Vue({
   router,
   store,
-  render: h => h(App)
+  render: (h) => h(App),
 }).$mount("#app");

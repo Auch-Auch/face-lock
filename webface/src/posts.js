@@ -10,11 +10,11 @@ class PostService {
         const res = await axios.get(
           url1 +
             "/" +
-            String(name || 0) +
+            String(name || "any").trim() +
             "/" +
-            String(date || 0) +
+            String(date || "any").trim() +
             "/" +
-            String(access || 0)
+            String(access || "any").trim()
         );
         const data = res.data;
         resolve(Number(data));
@@ -24,6 +24,7 @@ class PostService {
     });
   }
   static getPosts(skip, limit) {
+    console.log(url2 + String(skip) + "/" + String(limit));
     return new Promise(async (resolve, reject) => {
       try {
         const res = await axios.get(url2 + String(skip) + "/" + String(limit));
@@ -38,20 +39,47 @@ class PostService {
       }
     });
   }
+  static getPostById(id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.get(url2 + String(id));
+        const data = res.data;
+        resolve(
+          data.map((post) => ({
+            ...post,
+          }))
+        );
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
   static getPostsByTags(skip, limit, name, date, access) {
+    console.log(
+      url2 +
+        String(name || "any").trim() +
+        "/" +
+        String(date || "any").trim() +
+        "/" +
+        String(access || "any").trim() +
+        "/" +
+        String(skip || "any").trim() +
+        "/" +
+        String(limit || "any").trim()
+    );
     return new Promise(async (resolve, reject) => {
       try {
         const res = await axios.get(
           url2 +
-            String(name || 0) +
+            String(name || "any").trim() +
             "/" +
-            String(date || 0) +
+            String(date || "any").trim() +
             "/" +
-            String(access || 0) +
+            String(access || "any").trim() +
             "/" +
-            String(skip || 0) +
+            String(skip || "any").trim() +
             "/" +
-            String(limit || 0)
+            String(limit || "any").trim()
         );
         const data = res.data;
         resolve(
