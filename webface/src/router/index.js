@@ -30,6 +30,12 @@ const routes = [
     component: () => import("../views/statistics.vue"),
   },
   {
+    path: "/users/",
+    name: "users",
+    meta: { layout: "main" },
+    component: () => import("../views/Users.vue"),
+  },
+  {
     path: "/",
     name: "home",
     meta: { layout: "main" },

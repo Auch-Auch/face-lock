@@ -59,6 +59,22 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+
+
+router.get("/month/:number", async (req, res) => {
+  let number = req.params.number;
+  number = number.length === 1 ? "0" + number : number;
+  console.log([/\d\d\d\d-${number}-\d\d/]);
+  try {
+    const posts = await loadPostsColletion();
+    res.send(
+      await posts.find({ "info.day": { $regex: `-${number}-` } }).toArray()
+    );
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
     const posts = await loadPostsColletion();

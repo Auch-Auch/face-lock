@@ -1,13 +1,17 @@
-import threading
-import time
+import os
 import cv2
-import time
-n = 0;
 
-while True:
-    time.sleep(1) 
-    n += 1
-    print(n)
-    if n == 15:
-        break
-    
+
+def getFaces():
+    faces = []
+    labels = []
+    i = -1
+    for root, dirs, files in os.walk('faces/'):
+        i += 1
+        for name in files:
+            print(name)
+            faces.append(cv2.imread(root+'/'+name, cv2.IMREAD_GRAYSCALE))
+            labels.append(i)
+
+
+print(getFaces())

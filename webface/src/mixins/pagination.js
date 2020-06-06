@@ -15,7 +15,6 @@ export default {
   },
   methods: {
     async pageChangeHandler(page) {
-      this.loading = true;
       this.$router.push(
         `${this.$route.path}?page=${this.page}&name=${
           this.name || "any"
@@ -30,7 +29,6 @@ export default {
       );
       this.posts = PostService.dataParser(this.posts);
       this.items = this.posts;
-      this.loading = false;
     },
     setupPagination(page, postsCount, allPosts, name, date, access) {
       this.page = page;

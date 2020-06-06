@@ -42,6 +42,7 @@
 .images {
   max-width: 100%;
   height: auto;
+  padding: 12px;
 }
 .app-sidenav.open {
   transform: translateX(0);
@@ -185,9 +186,14 @@
   display: -ms-inline-flexbox;
   display: -webkit-inline-flex;
 }
+.container {
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
 .history-chart {
-  margin-left: 1rem;
-  margin-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 1rem;
   max-width: 600px;
 }
@@ -195,4 +201,18 @@
   margin-left: 1rem;
   margin-right: 1rem;
   margin-bottom: 1rem;
+}
+
+.btn {
+  margin: 20px;
+  padding: 5px 20px;
+}
+.msg {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 10px;
+  text-align: right;
+  background: rgba(255, 255, 255, 0.3);
+  font-size: 20px;
 }

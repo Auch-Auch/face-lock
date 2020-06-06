@@ -1,14 +1,19 @@
 import axios from "axios";
 
-const url1 = "http://localhost:5000/api/length/";
-const url2 = "http://localhost:5000/api/posts/";
+const lengthURL = "http://10.10.10.2:5000/api/length/";
+const postsURL = "http://10.10.10.2:5000/api/posts/";
+const monthURL = "http://10.10.10.2:5000/api/posts/month/";
+const settingsURL = "http://10.10.10.2:5000/api/settings/";
+const usersURL = "http://10.10.10.2:5000/api/users/";
+const uploadURL = "http://10.10.10.2:5000/api/upload/";
+const faceRecognitionURL = "http://10.10.10.2:5000/api/face_recognition/";
 
 class PostService {
   static getPostsCount(name, date, access) {
     return new Promise(async (resolve, reject) => {
       try {
         const res = await axios.get(
-          url1 +
+          lengthURL +
             "/" +
             String(name || "any").trim() +
             "/" +
@@ -23,11 +28,11 @@ class PostService {
       }
     });
   }
-  static getPosts(skip, limit) {
-    console.log(url2 + String(skip) + "/" + String(limit));
+
+  static getPostById(id) {
     return new Promise(async (resolve, reject) => {
       try {
-        const res = await axios.get(url2 + String(skip) + "/" + String(limit));
+        const res = await axios.get(postsURL + String(id));
         const data = res.data;
         resolve(
           data.map((post) => ({
@@ -39,10 +44,10 @@ class PostService {
       }
     });
   }
-  static getPostById(id) {
+  static getPostsByMonth(month) {
     return new Promise(async (resolve, reject) => {
       try {
-        const res = await axios.get(url2 + String(id));
+        const res = await axios.get(monthURL + String(month));
         const data = res.data;
         resolve(
           data.map((post) => ({
@@ -55,22 +60,10 @@ class PostService {
     });
   }
   static getPostsByTags(skip, limit, name, date, access) {
-    console.log(
-      url2 +
-        String(name || "any").trim() +
-        "/" +
-        String(date || "any").trim() +
-        "/" +
-        String(access || "any").trim() +
-        "/" +
-        String(skip || "any").trim() +
-        "/" +
-        String(limit || "any").trim()
-    );
     return new Promise(async (resolve, reject) => {
       try {
         const res = await axios.get(
-          url2 +
+          postsURL +
             String(name || "any").trim() +
             "/" +
             String(date || "any").trim() +
@@ -92,6 +85,132 @@ class PostService {
       }
     });
   }
+  static getSettings() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.get(settingsURL);
+        const data = res.data;
+        resolve(
+          data.map((settings) => ({
+            ...settings,
+          }))
+        );
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static pushCamera(camera) {
+    try {
+      axios({
+        method: "post",
+        url: settingsURL + "cameras",
+        data: {
+          camera: camera,
+        },
+      });
+      return 201;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  static changeCamera(camera) {
+    try {
+      axios({
+        method: "post",
+        url: settingsURL,
+        data: {
+          campath: camera,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  static getCameras() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.get(settingsURL + "cameras");
+        const data = res.data;
+        resolve(
+          data.map((cameras) => ({
+            ...cameras,
+          }))
+        );
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static getUsers() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios.get(usersURL);
+        const data = res.data;
+        resolve(
+          data.map((users) => ({
+            ...users,
+          }))
+        );
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static createNewUser(name) {
+    try {
+      axios({
+        method: "post",
+        url: usersURL,
+        data: {
+          name: name,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  static sendImg(img, name, id) {
+    console.log(img);
+    try {
+      axios({
+        method: "post",
+        url: faceRecognitionURL + "newuser",
+        data: {
+          imgBase64: img,
+          id: id,
+          name: name,
+        },
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  static predict(img) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await axios({
+          method: "post",
+          url: faceRecognitionURL + "predict",
+          data: {
+            imgBase64: img,
+          },
+        });
+        const data = res.data;
+        resolve(data);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
   static dataParser(Allposts) {
     const posts = Allposts.map((post) => ({
       id: post._id,

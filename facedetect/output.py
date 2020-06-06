@@ -5,10 +5,18 @@ import json
 import datetime
 import time
 import requests as req
+import asyncio
+from websocket import create_connection
+import pymongo
+import settings
 
-CAMPATH = 'http://192.168.1.3:8080/video'
+CAM_PATH = settings.CAMPATH
 N_AUTH_ATTEMPTS = 5
 PATH_DATA = 'faces/'
+
+
+#ws = create_connection("ws://192.168.43.247:81")
+# ws.send("ledon")
 
 
 def getDate(type=""):
@@ -81,7 +89,7 @@ def verificationFace(confidence, name, img, x, y):
 
 def main():
     global cap, startTime
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(int(CAM_PATH))
     names = os.listdir(PATH_DATA)
     faces, labels = getFaces()
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')

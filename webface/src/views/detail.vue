@@ -18,6 +18,7 @@
       </div>
       <img class="images" :src="this.src + this.posts[0].imgName + '.jpg'" />
     </div>
+
     <p class="center" v-else>there is no such record</p>
   </div>
 </template>
@@ -34,7 +35,7 @@ export default {
         return {
             loading: true,
             posts: "",
-            src: 'http://localhost:8000/'
+            src: 'http://10.10.10.2:8000/images/'
         }
     },
     async mounted() {

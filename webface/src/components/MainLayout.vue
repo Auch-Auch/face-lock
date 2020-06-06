@@ -21,6 +21,9 @@
             <li>
               <router-link to="/statistics">Statistics</router-link>
             </li>
+            <li>
+              <router-link to="/users">Users</router-link>
+            </li>
           </ul>
         </div>
       </nav>
@@ -36,6 +39,9 @@
       </li>
       <li>
         <router-link to="/statistics">Statistics</router-link>
+      </li>
+      <li>
+        <router-link to="/users">users</router-link>
       </li>
     </ul>
 
