@@ -53,7 +53,9 @@
           <div class="col s3">
             <div class="container">
               <div class="row">
-                <div class="col s12">{{ this.name ? this.name : "" }}</div>
+                <div
+                  class="col s12"
+                >{{ this.name && Number(this.confidence).toFixed(2) > 130 ? unknown : this.name }}</div>
                 <div class="col s12">
                   <canvas id="registeredPhoto" width="100" height="100"></canvas>
                 </div>
@@ -81,7 +83,7 @@ export default {
   data() {
     return {
      
-      src: "http://10.10.10.2:8000/faces/",
+      src: "http://localhost:8000/faces/",
       registeredPhoto: null,
       faceCtx: null,
       faceCanvas: null,
@@ -94,7 +96,7 @@ export default {
       registeredPhoto: null,
       photo: null,
       error: null,
-
+      unknown: 'unknown',
       name: null,
       confidence: null,
     };

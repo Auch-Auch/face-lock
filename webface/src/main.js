@@ -8,12 +8,14 @@ import router from "./router";
 import store from "./store";
 import "materialize-css/dist/js/materialize.min";
 import dateFilter from "@/filter/datefilters";
+import messages from "@/utils/messages.js";
 
 Vue.config.productionTip = false;
 Vue.filter("date", dateFilter);
 Vue.component("paginate", Paginate);
 Vue.use(MonthPicker);
 Vue.use(MonthPickerInput);
+Vue.use(messages);
 
 new Vue({
   router,

@@ -8,9 +8,9 @@ def getSettings():
         db = client["test"]
         collection = db["settings"]
         settings = collection.find_one()
-        return settings["CAMPATH"]
+        campath = settings["campath"]
+        if campath == "0":
+            campath = 0
+        return campath
     except Exception as e:
         print(e)
-
-
-CAMPATH = getSettings()

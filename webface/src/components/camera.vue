@@ -36,13 +36,11 @@
               <div class="col s12"></div>
               <div class="col s12 m4 l8" v-show="this.data">
                 {{
-                this.data
-                ? Number(this.data.confidence).toFixed(2).toString()
-                : ""
+                  this.data
+                    ? Number(this.data.confidence).toFixed(2).toString()
+                    : ""
                 }}
-                <i
-                  class="medium material-icons"
-                >trending_flat</i>
+                <i class="medium material-icons">trending_flat</i>
               </div>
               <div class="col s12"></div>
             </div>
@@ -50,8 +48,14 @@
         </div>
         <div class="col s3">
           <div class="container">
-            <div class="row" v-show="this.videoCap">
-              <div class="col s12">{{ this.data ? this.data.name : "" }}</div>
+            <div class="row" v-show="this.data">
+              <div class="col s12">
+                {{
+                  this.data && Number(this.data.confidence).toFixed(2) > 100
+                    ? unknown
+                    : this.userName
+                }}
+              </div>
               <div class="col s12">
                 <canvas id="registeredPhoto" width="100" height="100"></canvas>
               </div>
@@ -63,13 +67,28 @@
     <div>
       <div class="webcam">
         <video
+          id="tagvideo"
           class="webcam-video"
           ref="videoSrc"
           :width="videoWidth"
           :height="videoHeight"
           v-on:canplay="onSourceReady"
-        >Your browser does not support this application.</video>
-        <canvas ref="canvas" class="webcam-canvas" :width="videoWidth" :height="videoHeight"></canvas>
+        >
+          Your browser does not support this application.
+        </video>
+        <canvas
+          id="webcam"
+          class="webcam-canvas"
+          :width="videoWidth"
+          :height="videoHeight"
+        ></canvas>
+        <br />
+        <canvas
+          id="detectedCanvas"
+          class="webcam-video"
+          :width="videoWidth"
+          :height="videoHeight"
+        ></canvas>
       </div>
     </div>
     <p class="msg">{{ msg }}</p>
@@ -79,8 +98,10 @@
 <script>
 import getUserMedia from "getusermedia";
 import PostService from "../posts";
+import UsersService from "../users.js";
 
 const publicPath = process.env.BASE_URL;
+var socket = new WebSocket("ws://192.168.1.5:81/");
 let cv = null;
 
 export default {
@@ -103,13 +124,21 @@ export default {
       faceCanvas: null,
       shots: 0,
       data: null,
-      src: "http://10.10.10.2:8000/faces/",
+      src: "http://localhost:8000/faces/",
       registeredPhoto: null,
-
+      videoCanvas: null,
       isCameraOpen: false,
-
+      userName: null,
       camera: null,
       newImg: null,
+      confidence: null,
+      photoCtx: null,
+      timer: null,
+      wasFace: false,
+      unknown: "unknown",
+      imgBase64: null,
+      tagVideo: null,
+      detectedCanvas: null,
     };
   },
   methods: {
@@ -151,7 +180,6 @@ export default {
       this.$refs.videoSrc.srcObject = null;
       this.stream.getVideoTracks()[0].stop();
       this.stream = null;
-      
     },
     onSourceReady() {
       this.setMsg("onSourceReady.");
@@ -172,6 +200,7 @@ export default {
         return;
       }
       this.setMsg("loading OpenCv.js");
+      this.faceCanvas;
       const script = document.createElement("script");
       script.type = "text/javascript";
       script.async = "async";
@@ -209,7 +238,8 @@ export default {
         this.setMsg("Please startup your webcam.", "warn");
         return;
       }
-      this.canvasCtx = this.$refs.canvas.getContext("2d");
+      this.videoCanvas = document.getElementById("webcam");
+      this.canvasCtx = this.videoCanvas.getContext("2d");
       this.faceClassifier = new cv.CascadeClassifier();
       this.faceClassifier.load("haarcascade_frontalface");
       this.srcMat = new cv.Mat(this.videoHeight, this.videoWidth, cv.CV_8UC4);
@@ -219,7 +249,8 @@ export default {
       this.newImg = new Image();
       this.registeredPhoto = document.getElementById("registeredPhoto");
       this.faceCanvas = document.getElementById("faceCanvas");
-      console.log(this.name);
+      this.tagVideo = document.getElementById("tagvideo");
+      this.detectedCanvas = document.getElementById("detectedCanvas");
 
       this.processTimer = requestAnimationFrame(this.processVideo);
     },
@@ -241,7 +272,6 @@ export default {
         this.setMsg("Video stream not found.", "warn");
         return;
       }
-
       this.videoCap.read(this.srcMat);
       cv.cvtColor(this.srcMat, this.detectMat, cv.COLOR_RGBA2GRAY, 0);
 
@@ -254,6 +284,7 @@ export default {
         5,
         0
       );
+
       this.drawFace();
 
       this.processTimer = requestAnimationFrame(this.processVideo);
@@ -261,12 +292,22 @@ export default {
 
     drawFace() {
       this.canvasCtx.clearRect(0, 0, this.videoWidth, this.videoHeight);
+      if (this.faceVect.size() !== 0 && !this.wasFace) {
+        this.timer = Date.now();
+        this.wasFace = true;
+      }
+      if (this.faceVect.size() === 0 && this.wasFace) {
+        this.timer = Date.now();
+        this.wasFace = false;
+      }
       for (let i = 0; i < this.faceVect.size(); ++i) {
         const rect = this.faceVect.get(i);
         let dsize = new cv.Size(100, 100);
-        this.roi_gray = this.detectMat.roi(this.faceVect.get(i));
+        this.roi_gray = this.detectMat.roi(rect);
         cv.imshow("faceCanvas", this.roi_gray);
         let srcFace = cv.imread("faceCanvas");
+        let ctx = this.detectedCanvas.getContext("2d");
+        ctx.drawImage(this.tagVideo, 0, 0);
         cv.resize(srcFace, this.roi_gray, dsize, 0, 0, cv.INTER_AREA);
         cv.imshow("faceCanvas", this.roi_gray);
         this.predict();
@@ -283,11 +324,41 @@ export default {
       }
     },
     async predict() {
-      const imgURL = this.faceCanvas.toDataURL();
-      this.data = await PostService.predict(imgURL);
-      this.newImg.src = this.src + this.data.name + "/" + "1.jpg";
-      let ctx = this.registeredPhoto.getContext("2d");
-      ctx.drawImage(this.newImg, 0, 0);
+      const faceURL = this.faceCanvas.toDataURL();
+      const imgURL = this.detectedCanvas.toDataURL();
+      this.data = await PostService.predict(faceURL);
+      this.userName = this.data.name;
+      this.confidence = this.data.confidence.toFixed(2);
+      console.log(Date.now() - this.timer);
+      if (this.data.confidence > 100) {
+        this.newImg.src = this.src + "unknown" + "/" + "1.jpg";
+        if (Date.now() - this.timer > 1000) {
+          this.$message(`unknown`);
+          this.timer = this.timer + 1000;
+        }
+      } else {
+        this.newImg.src = this.src + this.data.name + "/" + "1.jpg";
+        if (Date.now() - this.timer > 1000) {
+          let imgName =
+            new Date().toISOString().slice(0, 10) +
+            new Date().toISOString().slice(11, 19);
+          PostService.createRecordImg(imgURL, imgName);
+          PostService.createNewRecord(
+            this.userName,
+            this.confidence,
+            imgName,
+            true
+          );
+          this.$message(`user ${this.userName} detected`);
+          socket.send("ledon");
+          this.timer = this.timer + 1000;
+        }
+      }
+
+      this.newImg.height = 100;
+      this.newImg.width = 100;
+      this.photoCtx = this.registeredPhoto.getContext("2d");
+      this.photoCtx.drawImage(this.newImg, 0, 0);
     },
     setMsg(msg, type = "log") {
       this.msg = msg;
@@ -297,14 +368,17 @@ export default {
       this.startCamera();
     },
     stopDetecting() {
-      this.stopCamera()
-      this.videoCap = null
-    }
+      this.stopCamera();
+      this.videoCap = null;
+      this.photoCtx.clearRect(0, 0, 100, 100);
+      this.unknown = "";
+      this.userName = "";
+    },
   },
   beforeDestroy() {
     this.stopCamera();
   },
-   beforeRouteUpdate() {
+  beforeRouteUpdate() {
     this.stopCamera();
   },
 };

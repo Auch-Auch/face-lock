@@ -1,55 +1,74 @@
 <template>
   <div>
-    <div class="container" v-if="!isCameraOpen">
-      <div class="row">
-        <div class="input-field col s10">
-          <i class="material-icons prefix">assignment_ind</i>
-          <input v-model="name" type="text" id="autocomplete-input" class="autocomplete" />
-          <label for="autocomplete-input">{{ "name"}}</label>
-        </div>
-        <div class="col s2">
-          <a class="btn-floating btn-small waves-effect waves-light black" v-on:click="openCamera">
-            <i class="material-icons">add</i>
-          </a>
-        </div>
-      </div>
-    </div>
-    <div v-show="isCameraOpen">
-      <div class="container">
+    <div class v-if="!loading">
+      <div class="container" v-if="!isCameraOpen">
         <div class="row">
-          <button
-            class="btn waves-effect waves-light black input-field col s8"
-            type="submit"
-            @click="takeShot"
-            id="download-btn"
-          >Take a shot</button>
-          <canvas id="faceCanvas" width="100" height="100"></canvas>
+          <div class="input-field col s10">
+            <i class="material-icons prefix">assignment_ind</i>
+            <input v-model="userName" type="text" id="autocomplete-input" class="autocomplete" />
+            <label for="autocomplete-input">{{ "name" }}</label>
+            <small
+              class="helper-text invalid"
+              v-if="this.users.indexOf(this.userName) != -1"
+            >{{ `user name exists` }}</small>
+          </div>
+          <div
+            class="col s2"
+            v-if="
+              this.userName.length > 3 &&
+              this.users.indexOf(this.userName) === -1
+            "
+          >
+            <a
+              class="btn-floating btn-small waves-effect waves-light black"
+              v-on:click="openCamera"
+            >
+              <i class="material-icons">add</i>
+            </a>
+          </div>
         </div>
       </div>
-      <div class="webcam">
-        <video
-          class="webcam-video"
-          ref="videoSrc"
-          :width="videoWidth"
-          :height="videoHeight"
-          v-on:canplay="onSourceReady"
-        >Your browser does not support this application.</video>
-        <canvas ref="canvas" class="webcam-canvas" :width="videoWidth" :height="videoHeight"></canvas>
+      <div v-show="isCameraOpen">
+        <div class="container">
+          <div class="row">
+            <button
+              class="btn waves-effect waves-light black input-field col s8"
+              type="submit"
+              @click="takeShot"
+              id="download-btn"
+            >Take a shot</button>
+            <canvas id="faceCanvas" width="100" height="100"></canvas>
+          </div>
+        </div>
+        <div class="webcam">
+          <video
+            class="webcam-video"
+            ref="videoSrc"
+            :width="videoWidth"
+            :height="videoHeight"
+            v-on:canplay="onSourceReady"
+          >Your browser does not support this application.</video>
+          <canvas ref="canvas" class="webcam-canvas" :width="videoWidth" :height="videoHeight"></canvas>
+        </div>
       </div>
+      <p class="msg">{{ msg }}</p>
     </div>
-    <p class="msg">{{ msg }}</p>
+    <loader v-else />
   </div>
 </template>
 
 <script>
 import getUserMedia from "getusermedia";
-import PostService from "../posts"
+import UsersService from "../users.js";
+import loader from "@/components/loader";
 const publicPath = process.env.BASE_URL;
 let cv = null;
 
 export default {
   name: "app",
-  props: ["name"],
+  components: {
+    loader,
+  },
   data() {
     return {
       videoWidth: 640,
@@ -64,16 +83,17 @@ export default {
       msg: "",
       roi_gray: null,
       faceCanvas: null,
+
       shots: 0,
-
+      userName: "",
       isCameraOpen: false,
-
+      users: [],
+      loading: false,
+      ifUserExists: false,
     };
   },
   methods: {
-    
     startCamera() {
-      
       const constraints = {
         audio: false,
         video: {
@@ -90,7 +110,7 @@ export default {
           },
         },
       };
-  
+
       getUserMedia(constraints, (err, s) => {
         if (err) {
           this.setMsg("getUserMedia failed", "warn");
@@ -103,7 +123,6 @@ export default {
           this.$refs.videoSrc.srcObject = s;
           this.$refs.videoSrc.play();
         }
-       
       });
     },
     stopCamera() {
@@ -178,8 +197,8 @@ export default {
       this.detectMat = new cv.Mat();
       this.videoCap = new cv.VideoCapture(this.$refs.videoSrc);
       this.faceVect = new cv.RectVector();
-      this.faceCanvas = document.getElementById('faceCanvas');
-      console.log(this.name)
+      this.faceCanvas = document.getElementById("faceCanvas");
+      console.log(this.name);
 
       this.processTimer = requestAnimationFrame(this.processVideo);
     },
@@ -223,12 +242,12 @@ export default {
       this.canvasCtx.clearRect(0, 0, this.videoWidth, this.videoHeight);
       for (let i = 0; i < this.faceVect.size(); ++i) {
         const rect = this.faceVect.get(i);
-        let dsize = new cv.Size(100, 100)
-        this.roi_gray = this.detectMat.roi(this.faceVect.get(i))
-         cv.imshow('faceCanvas', this.roi_gray)
-        let src = cv.imread('faceCanvas');
-        cv.resize(src, this.roi_gray, dsize, 0, 0, cv.INTER_AREA)
-        cv.imshow('faceCanvas', this.roi_gray)
+        let dsize = new cv.Size(100, 100);
+        this.roi_gray = this.detectMat.roi(this.faceVect.get(i));
+        cv.imshow("faceCanvas", this.roi_gray);
+        let src = cv.imread("faceCanvas");
+        cv.resize(src, this.roi_gray, dsize, 0, 0, cv.INTER_AREA);
+        cv.imshow("faceCanvas", this.roi_gray);
 
         if (rect.width > 0 && rect.height > 0) {
           this.canvasCtx.lineWidth = 2;
@@ -242,35 +261,38 @@ export default {
         }
       }
     },
- 
+
     async takeShot() {
-      
-     
-      const imgURL = this.faceCanvas.toDataURL()
-      console.log(imgURL)
-      await PostService.sendImg(imgURL, this.name, this.shots)
-      this.shots += 1
+      const imgURL = this.faceCanvas.toDataURL();
+      console.log(imgURL);
+      await UsersService.sendImg(imgURL, this.userName, this.shots);
+      this.shots += 1;
       if (this.shots === 9) {
-        this.isCameraOpen = false
+        this.$longMessage(`you added new user with name ${this.userName}`);
+        this.userName = "";
+        this.isCameraOpen = false;
         this.stopCamera();
       }
-      
+      this.$message("take another shot");
     },
 
-    openCamera() {
+    async openCamera() {
       this.startCamera();
-      PostService.createNewUser(this.name)
-      this.isCameraOpen = true
+      UsersService.createNewUser(this.userName);
+      this.isCameraOpen = true;
     },
     setMsg(msg, type = "log") {
       this.msg = msg;
       console[type](msg);
     },
   },
-  mounted() {
-
-    
+  async mounted() {
+    this.loading = true;
+    this.users = await UsersService.getUsers();
+    this.users = this.users.map((user) => user.name);
+    this.loading = false;
   },
+
   beforeDestroy() {
     this.stopCamera();
   },
@@ -278,7 +300,7 @@ export default {
 </script>
 <style lang="less">
 .btn {
-  margin: 20px;
+  margin: 0px;
   padding: 5px 20px;
 }
 .webcam {

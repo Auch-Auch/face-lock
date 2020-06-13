@@ -1,22 +1,21 @@
 const cv = require("opencv4nodejs");
 const fs = require("fs");
+
 const express = require("express");
 const path = require("path");
-const cluster = require("cluster");
 
 const router = express.Router();
 
 const facesPath = `../facedetect/faces/`;
 
 const lbph = new cv.LBPHFaceRecognizer();
-const names = fs.readdirSync(facesPath);
 const faceCascade = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT2);
 const camFps = 10;
 const camInterval = 1000 / camFps;
 var recognitionInterval;
 var videoCap;
 
-function getFaces() {
+function getFaces(names) {
   let facesData = {
     faces: [],
     labels: [],
@@ -34,14 +33,14 @@ function getFaces() {
   return facesData;
 }
 
-function trainAlgorithm() {
-  const faceData = getFaces();
+function trainAlgorithm(names) {
+  const faceData = getFaces(names);
   const trainImgs = faceData.faces;
   const labels = faceData.labels;
   lbph.train(trainImgs, labels);
 }
 
-function recognition(videoCap, socket, action) {
+function recognition(videoCap, socket, action, names) {
   try {
     if (action === "stop") {
       clearInterval(recognitionInterval);
@@ -64,11 +63,9 @@ function recognition(videoCap, socket, action) {
       });
     }
   } catch (e) {
-    throw new Error("something wrong with video processing");
+    console.log(e);
   }
 }
-
-trainAlgorithm();
 
 function startVideo(adress) {
   try {
@@ -83,13 +80,15 @@ function startVideo(adress) {
 module.exports = (sockets) => {
   try {
     sockets.on("startDetecting", (data) => {
+      let names = fs.readdirSync(facesPath);
+      trainAlgorithm(names);
       if (data.action === "stop") {
         clearInterval(recognitionInterval);
         return;
       }
       cap = startVideo(data.adress);
       recognitionInterval = setInterval(
-        () => recognition(cap, sockets, data.action),
+        () => recognition(cap, sockets, data.action, names),
         camInterval
       );
     });

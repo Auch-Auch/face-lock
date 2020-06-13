@@ -1,17 +1,17 @@
 const cv = require("opencv4nodejs");
 const express = require("express");
 const fs = require("fs");
+const fsx = require("fs-extra");
 const path = require("path");
+const mongodb = require("mongodb");
 
 const router = express.Router();
 
 const facesPath = `../facedetect/faces/`;
 const lbph = new cv.LBPHFaceRecognizer();
-const fisher = new cv.FisherFaceRecognizer();
-const eigen = new cv.EigenFaceRecognizer();
-const names = fs.readdirSync(facesPath);
+let names = fs.readdirSync(facesPath);
 
-function getFaces() {
+function getFaces(names) {
   let facesData = {
     faces: [],
     labels: [],
@@ -30,11 +30,11 @@ function getFaces() {
 }
 
 function trainAlgorithms() {
-  const faceData = getFaces();
+  names = fs.readdirSync(facesPath);
+  console.log(names);
+  const faceData = getFaces(names);
   const trainImgs = faceData.faces;
   const labels = faceData.labels;
-  fisher.train(trainImgs, labels);
-  eigen.train(trainImgs, labels);
   lbph.train(trainImgs, labels);
 }
 
@@ -82,12 +82,43 @@ router.post("/newuser", async (req, res) => {
       `../facedetect/faces/${name}/${+id + 1}.jpg`,
       Buffer.from(img, "base64")
     );
-    trainAlgorithms();
+    if (+id + 1 === 9) {
+      trainAlgorithms();
+      console.log("train");
+    }
     res.status(201).send();
   } catch (e) {
     console.log(e);
   }
 });
+
+function removeUser(name) {
+  fsx.remove(facesPath + name);
+  setTimeout(trainAlgorithms, 1000);
+}
+router.delete("/delete/user", async (req, res) => {
+  try {
+    const users = await loadUsersColletion();
+    const userId = new mongodb.ObjectID(req.body.id);
+    users.deleteOne({ _id: userId });
+    removeUser(req.body.name);
+    res.status(201).send;
+  } catch (e) {
+    throw e;
+  }
+});
+
+async function loadUsersColletion() {
+  const client = await mongodb.MongoClient.connect(
+    "mongodb+srv://auch:123567@cluster0-solgr.mongodb.net/test",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  );
+
+  return client.db("test").collection("users");
+}
 
 trainAlgorithms();
 module.exports = router;

@@ -1,6 +1,9 @@
 const express = require("express");
 const mongodb = require("mongodb");
+const fs = require("fs-extra");
+const path = require("path");
 
+const facesPath = `../facedetect/faces/`;
 const router = express.Router();
 
 router.get("/", async (req, res) => {

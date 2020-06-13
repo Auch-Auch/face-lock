@@ -1,5 +1,8 @@
 const express = require("express");
 const mongodb = require("mongodb");
+const fs = require("fs");
+const fsx = require("fs-extra");
+const path = require("path");
 
 const router = express.Router();
 
@@ -59,8 +62,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
-
 router.get("/month/:number", async (req, res) => {
   let number = req.params.number;
   number = number.length === 1 ? "0" + number : number;
@@ -72,6 +73,28 @@ router.get("/month/:number", async (req, res) => {
     );
   } catch (e) {
     console.log(e);
+  }
+});
+
+router.post("/img", async (req, res) => {
+  const imgName = req.body.imgName;
+  let img = req.body.imgBase64;
+  img = img.replace("data:image/png;base64,", "", img);
+  img = img.replace(" ", "+", img);
+  fs.writeFileSync(
+    `../facedetect/images/${imgName}.jpg`,
+    Buffer.from(img, "base64")
+  );
+  res.status(201).send();
+});
+
+router.get("/posts/delete", async (req, res) => {
+  try {
+    const users = await loadPostsColletion();
+    users.deleteMany({ "info.0.day": "2020-06-08" });
+    res.status(201).send;
+  } catch (e) {
+    throw e;
   }
 });
 

@@ -9,17 +9,27 @@
         <form class="form" @submit.prevent="submitHandler">
           <div class="input-field col s12">
             <i class="material-icons prefix">assignment_ind</i>
-            <input v-model="name" type="text" id="autocomplete-input" class="autocomplete" />
-            <label
-              for="autocomplete-input"
-            >{{this.$route.query.name === 'any' || !this.name ? "name" : ""}}</label>
+            <input
+              v-model="name"
+              type="text"
+              id="autocomplete-input"
+              class="autocomplete"
+            />
+            <label for="autocomplete-input">{{
+              this.$route.query.name === "any" || !this.name ? "name" : ""
+            }}</label>
           </div>
           <div class="input-field col s12">
             <i class="material-icons prefix">access_time</i>
-            <input type="text" id="datepicker-input" class="datepicker" v-model.lazy="date" />
-            <label
-              for="datepicker-input"
-            >{{this.$route.query.date === 'any' || !this.date ? "pick date" : ""}}</label>
+            <input
+              type="text"
+              id="datepicker-input"
+              class="datepicker"
+              v-model.lazy="date"
+            />
+            <label for="datepicker-input">{{
+              this.$route.query.date === "any" || !this.date ? "pick date" : ""
+            }}</label>
           </div>
           <div class="input-field col s12">
             <select ref="select" v-model="access">
@@ -28,7 +38,10 @@
               <option value="false">no access</option>
             </select>
           </div>
-          <button class="btn waves-effect waves-light black input-field col s12" type="submit">
+          <button
+            class="btn waves-effect waves-light black input-field col s12"
+            type="submit"
+          >
             search
             <i class="material-icons right">send</i>
           </button>
@@ -59,7 +72,7 @@
 
 <script>
 import loader from "@/components/loader";
-import Pagination from "@/mixins/pagination";
+import Pagination from "@/mixins/recordsPagination";
 import HistoryTable from "@/components/HistoryTable";
 import PostService from "../posts";
 export default {
@@ -95,13 +108,18 @@ export default {
       startView: "years",
     }).toString();
     try {
-      const page = +this.$route.query.page
-      const name = this.$route.query.name
-      const date = this.$route.query.date
-      const access = this.$route.query.access
+      const page = +this.$route.query.page;
+      const name = this.$route.query.name;
+      const date = this.$route.query.date;
+      const access = this.$route.query.access;
       this.postsCount = await PostService.getPostsCount(name, date, access);
-      this.posts = await PostService.getPostsByTags((page - 1) * this.limit, 
-      this.limit, name, date, access);
+      this.posts = await PostService.getPostsByTags(
+        (page - 1) * this.limit,
+        this.limit,
+        name,
+        date,
+        access
+      );
       this.posts = PostService.dataParser(this.posts);
       this.setupPagination(
         page,
@@ -110,14 +128,14 @@ export default {
         name,
         date,
         access
-        );
+      );
       this.loading = false;
     } catch (err) {}
   },
   methods: {
     async submitHandler(event) {
-      this.loading = true
-      this.page = 1
+      this.loading = true;
+      this.page = 1;
       this.posts = await PostService.getPostsByTags(
         this.skip,
         this.limit,
@@ -126,15 +144,25 @@ export default {
         this.access
       );
       this.posts = PostService.dataParser(this.posts);
-      this.postsCount = await PostService.getPostsCount(this.name, this.date, this.access);
+      this.postsCount = await PostService.getPostsCount(
+        this.name,
+        this.date,
+        this.access
+      );
       this.$router.push(
-        `${this.$route.path}?page=${this.page}&name=${this.name || "any"}&date=${this.date || "any"}&access=${this.access || "any"}`
+        `${this.$route.path}?page=${this.page}&name=${
+          this.name || "any"
+        }&date=${this.date || "any"}&access=${this.access || "any"}`
       );
       this.setupPagination(
-        this.page, this.postsCount, this.posts, this.name, this.date, this.access
-        );
-      this.loading = false
-      
+        this.page,
+        this.postsCount,
+        this.posts,
+        this.name,
+        this.date,
+        this.access
+      );
+      this.loading = false;
     },
   },
 };

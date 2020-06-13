@@ -1,12 +1,10 @@
 import axios from "axios";
 
-const lengthURL = "http://10.10.10.2:5000/api/length/";
-const postsURL = "http://10.10.10.2:5000/api/posts/";
-const monthURL = "http://10.10.10.2:5000/api/posts/month/";
-const settingsURL = "http://10.10.10.2:5000/api/settings/";
-const usersURL = "http://10.10.10.2:5000/api/users/";
-const uploadURL = "http://10.10.10.2:5000/api/upload/";
-const faceRecognitionURL = "http://10.10.10.2:5000/api/face_recognition/";
+const lengthURL = "http://localhost:5000/api/length/";
+const postsURL = "http://localhost:5000/api/posts/";
+const monthURL = "http://localhost:5000/api/posts/month/";
+const settingsURL = "http://localhost:5000/api/settings/";
+const faceRecognitionURL = "http://localhost:5000/api/face_recognition/";
 
 class PostService {
   static getPostsCount(name, date, access) {
@@ -85,6 +83,43 @@ class PostService {
       }
     });
   }
+
+  static createRecordImg(img, name) {
+    try {
+      axios({
+        method: "post",
+        url: postsURL + "img",
+        data: {
+          imgBase64: img,
+          imgName: name,
+        },
+      });
+      return 201;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  static createNewRecord(name, confidence, imgName, access) {
+    let data = [];
+    data[0] = {
+      name: name,
+      confidence: confidence,
+      day: new Date().toISOString().slice(0, 10),
+      time: new Date().toISOString().slice(11, 19),
+      access: access,
+      imgName: imgName,
+    };
+    try {
+      axios({
+        method: "post",
+        url: postsURL,
+        data: data,
+      });
+      return 201;
+    } catch (err) {
+      console.log(err);
+    }
+  }
   static getSettings() {
     return new Promise(async (resolve, reject) => {
       try {
@@ -146,53 +181,6 @@ class PostService {
     });
   }
 
-  static getUsers() {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const res = await axios.get(usersURL);
-        const data = res.data;
-        resolve(
-          data.map((users) => ({
-            ...users,
-          }))
-        );
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
-
-  static createNewUser(name) {
-    try {
-      axios({
-        method: "post",
-        url: usersURL,
-        data: {
-          name: name,
-        },
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  static sendImg(img, name, id) {
-    console.log(img);
-    try {
-      axios({
-        method: "post",
-        url: faceRecognitionURL + "newuser",
-        data: {
-          imgBase64: img,
-          id: id,
-          name: name,
-        },
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   static predict(img) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -214,7 +202,7 @@ class PostService {
   static dataParser(Allposts) {
     const posts = Allposts.map((post) => ({
       id: post._id,
-      date: post.info[0].day,
+      date: post.info[0].day ? post.info[0].day : "null",
       time: post.info[0].time,
       imgName: post.info[0].imgName,
       confidence: post.info[0].confidence,

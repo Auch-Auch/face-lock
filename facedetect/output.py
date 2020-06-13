@@ -10,13 +10,12 @@ from websocket import create_connection
 import pymongo
 import settings
 
-CAM_PATH = settings.CAMPATH
+CAM_PATH = settings.getSettings()
 N_AUTH_ATTEMPTS = 5
 PATH_DATA = 'faces/'
+print(CAM_PATH)
 
-
-#ws = create_connection("ws://192.168.43.247:81")
-# ws.send("ledon")
+#ws = create_connection("ws://192.168.1.5:81/")
 
 
 def getDate(type=""):
@@ -71,25 +70,27 @@ def verificationFace(confidence, name, img, x, y):
     global N_AUTH_ATTEMPTS, startTime
     if confidence <= 80:
         getPutText(name, confidence, img, x, y)
-        if time.time() - startTime > 5 and N_AUTH_ATTEMPTS != 0:
+        if time.time() - startTime > 1 and N_AUTH_ATTEMPTS != 0:
             print("access")
+            # ws.send("ledon")
             cv2.imwrite('images/' + getDate("img") + '.jpg', img)
             pushPost(name, confidence, True)
-            startTime = startTime + 5
+            startTime = startTime + 1
             N_AUTH_ATTEMPTS = 5
     else:
         getPutText(name, confidence, img, x, y)
-        if time.time() - startTime > 5 and N_AUTH_ATTEMPTS != 0:
+        if time.time() - startTime > 1 and N_AUTH_ATTEMPTS != 0:
+
             print("No access")
             cv2.imwrite('images/' + getDate("img") + '.jpg', img)
             pushPost(name, confidence, False)
-            startTime = startTime + 5
+            startTime = startTime + 1
             N_AUTH_ATTEMPTS -= 1
 
 
 def main():
     global cap, startTime
-    cap = cv2.VideoCapture(int(CAM_PATH))
+    cap = cv2.VideoCapture(CAM_PATH)
     names = os.listdir(PATH_DATA)
     faces, labels = getFaces()
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -104,9 +105,11 @@ def main():
             startTime = time.time()
             wasFace = True
         elif faces.__len__() == 0 and wasFace:
+            # ws.send("ledoff")
             wasFace = False
             startTime = 0
         for (x, y, w, h) in faces:
+            print(startTime)
             cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
             roiGray = gray[y:y+h, x:x+w]
             label = face_recognizer.predict(roiGray)

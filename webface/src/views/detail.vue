@@ -35,7 +35,7 @@ export default {
         return {
             loading: true,
             posts: "",
-            src: 'http://10.10.10.2:8000/images/'
+            src: 'http://localhost:8000/images/'
         }
     },
     async mounted() {
