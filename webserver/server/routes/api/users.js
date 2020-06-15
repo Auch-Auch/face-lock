@@ -2,6 +2,7 @@ const express = require("express");
 const mongodb = require("mongodb");
 const fs = require("fs-extra");
 const path = require("path");
+require("dotenv").config();
 
 const facesPath = `../facedetect/faces/`;
 const router = express.Router();
@@ -30,8 +31,9 @@ router.post("/", async (req, res) => {
 });
 
 async function loadUsersColletion() {
+  const password = process.env.CLIENT_PASSWORD;
   const client = await mongodb.MongoClient.connect(
-    "mongodb+srv://auch:123567@cluster0-solgr.mongodb.net/test",
+    `mongodb+srv://auch:${password}@cluster0-solgr.mongodb.net/test`,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,

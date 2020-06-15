@@ -1,5 +1,6 @@
 const express = require("express");
 const mongodb = require("mongodb");
+require("dotenv").config();
 
 const router = express.Router();
 
@@ -32,8 +33,9 @@ router.post("/", async (req, res) => {
 });
 
 async function loadPostsColletion() {
+  const password = process.env.CLIENT_PASSWORD;
   const client = await mongodb.MongoClient.connect(
-    "mongodb+srv://auch:123567@cluster0-solgr.mongodb.net/test",
+    `mongodb+srv://auch:${password}@cluster0-solgr.mongodb.net/test`,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
