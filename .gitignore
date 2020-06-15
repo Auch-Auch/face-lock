@@ -1,6 +1,5 @@
 *.jpg
 *.png
-*.xml
 *.avi
 *.gpg
 .env
