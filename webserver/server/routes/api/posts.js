@@ -10,7 +10,7 @@ let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "auchhunter@gmail.com",
-    pass: "123567Dfvgbh",
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 
@@ -75,7 +75,6 @@ router.get("/:id", async (req, res) => {
 router.get("/month/:number", async (req, res) => {
   let number = req.params.number;
   number = number.length === 1 ? "0" + number : number;
-  console.log([/\d\d\d\d-${number}-\d\d/]);
   try {
     const posts = await loadPostsColletion();
     res.send(
