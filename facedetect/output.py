@@ -8,14 +8,27 @@ import requests as req
 import asyncio
 from websocket import create_connection
 import pymongo
-import settings
 
-CAM_PATH = settings.getSettings()
+
 N_AUTH_ATTEMPTS = 5
 PATH_DATA = 'faces/'
-print(CAM_PATH)
+
 
 #ws = create_connection("ws://192.168.1.5:81/")
+
+def getCampath():
+    try:
+        client = pymongo.MongoClient(
+            "mongodb+srv://auch:123567@cluster0-solgr.mongodb.net/", )
+        db = client["test"]
+        collection = db["settings"]
+        settings = collection.find_one()
+        campath = settings["campath"]
+        if campath == "0":
+            campath = 0
+        return campath
+    except Exception as e:
+        print(e)
 
 
 def getDate(type=""):
@@ -56,14 +69,9 @@ def pushPost(name, confidence, access):
 
 
 def getPutText(name, confidence, frame, x, y):
-    if confidence < 80:
-        text = 'Name: ' + name + ' confidence: ' + str(confidence)
-        return cv2.putText(frame, text, (x, y),
-                           cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 255, 0), 2)
-    else:
-        text = 'Name: ' + 'unknown' + ' confidence: ' + str(confidence)
-        return cv2.putText(frame, text, (x, y),
-                           cv2.FONT_HERSHEY_SIMPLEX, 1.5, (124, 10, 2), 3)
+    text = 'Name: ' + name + ' confidence: ' + str(confidence)
+    return cv2.putText(frame, text, (x, y),
+                       cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 255, 0), 2)
 
 
 def verificationFace(confidence, name, img, x, y):
@@ -78,9 +86,8 @@ def verificationFace(confidence, name, img, x, y):
             startTime = startTime + 1
             N_AUTH_ATTEMPTS = 5
     else:
-        getPutText(name, confidence, img, x, y)
+        getPutText('unknown', confidence, img, x, y)
         if time.time() - startTime > 1 and N_AUTH_ATTEMPTS != 0:
-
             print("No access")
             cv2.imwrite('images/' + getDate("img") + '.jpg', img)
             pushPost(name, confidence, False)
@@ -90,7 +97,8 @@ def verificationFace(confidence, name, img, x, y):
 
 def main():
     global cap, startTime
-    cap = cv2.VideoCapture(CAM_PATH)
+    campath = getCampath()
+    cap = cv2.VideoCapture(campath)
     names = os.listdir(PATH_DATA)
     faces, labels = getFaces()
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
