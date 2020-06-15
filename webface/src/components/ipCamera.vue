@@ -99,6 +99,7 @@ export default {
       unknown: 'unknown',
       name: null,
       confidence: null,
+      timer: 0,
     };
   },
  
@@ -116,9 +117,28 @@ export default {
       this.newFace.onload = () => {
         this.faceCtx.drawImage(this.newFace, 0, 0);
       }
-      this.newFace.src = 'data:image/png;base64,' + base64String;;
+      this.newFace.src = 'data:image/png;base64,' + base64String;
       this.photo.src = this.src + this.name + '/' + '1.jpg'
       this.photoCtx.drawImage(this.photo, 0, 0)
+      let imgName =
+            new Date().toISOString().slice(0, 10) +
+            new Date().toISOString().slice(11, 19);
+      let newImg = this.videoCanvas.toDataURL()
+      if (this.confidence < 120 && this.timer < Date.now()) {
+        this.$message(`user ${this.name} detected`)
+        PostService.createNewRecord(this.name, this.confidence.toFixed(2), imgName, true)
+        PostService.createRecordImg(newImg, imgName)
+        this.timer = Date.now() + 1000
+      } 
+      if (this.confidence > 120 && this.timer < Date.now()) {
+        this.$message(`unknown`)
+        PostService.createNewRecord('unknown', this.confidence.toFixed(2), imgName, true)
+        PostService.createRecordImg(newImg, imgName)
+        this.timer = Date.now() + 1000
+      }
+      
+        
+      
       
       
       });

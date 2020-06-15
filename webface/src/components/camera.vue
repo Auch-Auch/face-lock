@@ -36,11 +36,13 @@
               <div class="col s12"></div>
               <div class="col s12 m4 l8" v-show="this.data">
                 {{
-                  this.data
-                    ? Number(this.data.confidence).toFixed(2).toString()
-                    : ""
+                this.data
+                ? Number(this.data.confidence).toFixed(2).toString()
+                : ""
                 }}
-                <i class="medium material-icons">trending_flat</i>
+                <i
+                  class="medium material-icons"
+                >trending_flat</i>
               </div>
               <div class="col s12"></div>
             </div>
@@ -51,9 +53,9 @@
             <div class="row" v-show="this.data">
               <div class="col s12">
                 {{
-                  this.data && Number(this.data.confidence).toFixed(2) > 100
-                    ? unknown
-                    : this.userName
+                this.data && Number(this.data.confidence).toFixed(2) > 100
+                ? unknown
+                : this.userName
                 }}
               </div>
               <div class="col s12">
@@ -73,22 +75,10 @@
           :width="videoWidth"
           :height="videoHeight"
           v-on:canplay="onSourceReady"
-        >
-          Your browser does not support this application.
-        </video>
-        <canvas
-          id="webcam"
-          class="webcam-canvas"
-          :width="videoWidth"
-          :height="videoHeight"
-        ></canvas>
+        >Your browser does not support this application.</video>
+        <canvas id="webcam" class="webcam-canvas" :width="videoWidth" :height="videoHeight"></canvas>
         <br />
-        <canvas
-          id="detectedCanvas"
-          class="webcam-video"
-          :width="videoWidth"
-          :height="videoHeight"
-        ></canvas>
+        <canvas id="detectedCanvas" class="webcam-video" :width="videoWidth" :height="videoHeight"></canvas>
       </div>
     </div>
     <p class="msg">{{ msg }}</p>
@@ -139,6 +129,7 @@ export default {
       imgBase64: null,
       tagVideo: null,
       detectedCanvas: null,
+      detectedCtx: null,
     };
   },
   methods: {
@@ -297,7 +288,7 @@ export default {
         this.wasFace = true;
       }
       if (this.faceVect.size() === 0 && this.wasFace) {
-        this.timer = Date.now();
+        this.timer = Date.now()
         this.wasFace = false;
       }
       for (let i = 0; i < this.faceVect.size(); ++i) {
@@ -306,8 +297,8 @@ export default {
         this.roi_gray = this.detectMat.roi(rect);
         cv.imshow("faceCanvas", this.roi_gray);
         let srcFace = cv.imread("faceCanvas");
-        let ctx = this.detectedCanvas.getContext("2d");
-        ctx.drawImage(this.tagVideo, 0, 0);
+        this.detectedCtx = this.detectedCanvas.getContext("2d");
+        this.detectedCtx.drawImage(this.tagVideo, 0, 0);
         cv.resize(srcFace, this.roi_gray, dsize, 0, 0, cv.INTER_AREA);
         cv.imshow("faceCanvas", this.roi_gray);
         this.predict();
@@ -334,7 +325,14 @@ export default {
         this.newImg.src = this.src + "unknown" + "/" + "1.jpg";
         if (Date.now() - this.timer > 1000) {
           this.$message(`unknown`);
-          this.timer = this.timer + 1000;
+          this.timer += 1000
+          PostService.createRecordImg(imgURL, imgName);
+          PostService.createNewRecord(
+           'unknown',
+           this.confidence,
+           imgName,
+           true
+         );
         }
       } else {
         this.newImg.src = this.src + this.data.name + "/" + "1.jpg";
@@ -344,14 +342,14 @@ export default {
             new Date().toISOString().slice(11, 19);
           PostService.createRecordImg(imgURL, imgName);
           PostService.createNewRecord(
-            this.userName,
-            this.confidence,
-            imgName,
-            true
-          );
+           this.userName,
+           this.confidence,
+           imgName,
+           true
+         );
           this.$message(`user ${this.userName} detected`);
-          socket.send("ledon");
-          this.timer = this.timer + 1000;
+          //socket.send("ledon");
+          this.timer += 1000
         }
       }
 
@@ -373,6 +371,7 @@ export default {
       this.photoCtx.clearRect(0, 0, 100, 100);
       this.unknown = "";
       this.userName = "";
+      this.detectedCtx.clearRect(0, 0, 100, 100)
     },
   },
   beforeDestroy() {

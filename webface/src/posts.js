@@ -3,7 +3,6 @@ import axios from "axios";
 const lengthURL = "http://localhost:5000/api/length/";
 const postsURL = "http://localhost:5000/api/posts/";
 const monthURL = "http://localhost:5000/api/posts/month/";
-const settingsURL = "http://localhost:5000/api/settings/";
 const faceRecognitionURL = "http://localhost:5000/api/face_recognition/";
 
 class PostService {
@@ -119,66 +118,6 @@ class PostService {
     } catch (err) {
       console.log(err);
     }
-  }
-  static getSettings() {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const res = await axios.get(settingsURL);
-        const data = res.data;
-        resolve(
-          data.map((settings) => ({
-            ...settings,
-          }))
-        );
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
-
-  static pushCamera(camera) {
-    try {
-      axios({
-        method: "post",
-        url: settingsURL + "cameras",
-        data: {
-          camera: camera,
-        },
-      });
-      return 201;
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  static changeCamera(camera) {
-    try {
-      axios({
-        method: "post",
-        url: settingsURL,
-        data: {
-          campath: camera,
-        },
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  static getCameras() {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const res = await axios.get(settingsURL + "cameras");
-        const data = res.data;
-        resolve(
-          data.map((cameras) => ({
-            ...cameras,
-          }))
-        );
-      } catch (err) {
-        reject(err);
-      }
-    });
   }
 
   static predict(img) {

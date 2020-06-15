@@ -14,6 +14,8 @@ const camFps = 10;
 const camInterval = 1000 / camFps;
 var recognitionInterval;
 var videoCap;
+let timer;
+let wasFace = false;
 
 function getFaces(names) {
   let facesData = {
@@ -55,6 +57,11 @@ function recognition(videoCap, socket, action, names) {
       faces.objects.forEach((rect, i) => {
         const face = img.getRegion(rect);
         const result = lbph.predict(face.bgrToGray().resize(100, 100));
+        cv.drawDetection(img, rect);
+        socket.emit("frame", {
+          buffer: cv.imencode(".jpg", img),
+        });
+
         socket.emit("face", {
           buffer: cv.imencode(".jpg", face.resize(100, 100).bgrToGray()),
           name: names[result.label],

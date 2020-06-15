@@ -3,6 +3,15 @@ const mongodb = require("mongodb");
 const fs = require("fs");
 const fsx = require("fs-extra");
 const path = require("path");
+const nodemailer = require("nodemailer");
+
+let transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "auchhunter@gmail.com",
+    pass: "123567Dfvgbh",
+  },
+});
 
 const router = express.Router();
 
@@ -90,13 +99,42 @@ router.post("/img", async (req, res) => {
 
 router.get("/posts/delete", async (req, res) => {
   try {
-    const users = await loadPostsColletion();
-    users.deleteMany({ "info.0.day": "2020-06-08" });
+    const posts = await loadPostsColletion();
+    posts.deleteMany({ "info.0.day": "2020-06-08" });
     res.status(201).send;
   } catch (e) {
     throw e;
   }
 });
+
+function recordsDataToString(data) {
+  data = data.map(
+    (record, index) =>
+      "</td>" +
+      "<tr>" +
+      `#${index + 1}` +
+      "</tr>" +
+      "<tr>" +
+      "name: " +
+      record.info[0].name +
+      "</tr>" +
+      "<tr>" +
+      "confidence: " +
+      record.info[0].confidence +
+      "</tr>" +
+      "<tr>" +
+      "date: " +
+      record.info[0].day +
+      "</tr>" +
+      "<tr>" +
+      "time: " +
+      record.info[0].time +
+      "<br>" +
+      "</tr>" +
+      "<br>"
+  );
+  return data.join("</td>");
+}
 
 router.post("/", async (req, res) => {
   try {
@@ -117,6 +155,23 @@ router.post("/", async (req, res) => {
           }
         );
       });
+    const length = await posts.find().count();
+    if (length % 100 === 0) {
+      const records = recordsDataToString(
+        await posts.find().sort({ _id: -1 }).limit(100).toArray()
+      );
+      const date = new Date().toGMTString();
+      let result = await transporter.sendMail({
+        from: `"webFace app  ${date}" <auchhunter@gmail.com>`,
+        to: "auchcrypto@gmail.com",
+        subject: "Message from webFace app",
+        text: records,
+        html: `<h1>  last 100 records history </h1>
+        <br>
+        <table>${records}</table>
+        `,
+      });
+    }
     res.status(201).send();
   } catch (e) {
     console.log(e);
