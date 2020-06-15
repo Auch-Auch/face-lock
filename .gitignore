@@ -1,4 +1,8 @@
 *.jpg
+*.png
+*.xml
+*.avi
+*.gpg
 .env
 .DS_Store
 node_modules
