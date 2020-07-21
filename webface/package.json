@@ -14,7 +14,7 @@
     "jQuery": "^1.7.4",
     "jquery": "^3.5.1",
     "less-loader": "^6.1.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "materialize-css": "^1.0.0-rc.2",
     "register-service-worker": "^1.6.2",
     "socket-io": "^1.0.0",
