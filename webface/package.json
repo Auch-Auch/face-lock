@@ -18,7 +18,7 @@
     "materialize-css": "^1.0.0-rc.2",
     "register-service-worker": "^1.6.2",
     "socket-io": "^1.0.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.5.0",
     "socket.io-client": "^2.3.0",
     "stats.js": "^0.17.0",
     "uws": "^100.0.1",
