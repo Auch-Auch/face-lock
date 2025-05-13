@@ -1,9 +1,7 @@
-# face-lock mono repository
+# web app for an access control system with face recognition
 
-web app for access control system with face recognition
+webface - vue front-end
 
-webface - front-end
+webserver - node js back-end
 
-webserver - back-end
-
-faceDetect - python script for real time recognition
+faceDetect - python script for real time recognition for testing
